@@ -93,6 +93,7 @@ export const tripService = {
       throw error.response?.data || error;
     }
   },*/
+  // Travel_frontend/src/services/tripService.js
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:5000/api/travel";

@@ -8,16 +8,36 @@ const {
   updateTravelStatus,
 } = require("../controllers/travelController");
 
-// Employee submits a new travel request
-router.post("/", authMiddleware, roleMiddleware(["employee"]), createTravelRequest);
+// ✅ Allow employee / user / admin / manager to create request
+router.post(
+  "/",
+  authMiddleware,
+  roleMiddleware(["employee", "admin", "manager", "user"]),
+  createTravelRequest
+);
 
-// Employee views their own requests
-router.get("/my", authMiddleware, roleMiddleware(["employee"]), getMyTravelRequests);
+// ✅ Employee views only their travel requests
+router.get(
+  "/my",
+  authMiddleware,
+  roleMiddleware(["employee", "admin", "manager", "user"]), // also allow user
+  getMyTravelRequests
+);
 
-// Admin/Manager views all travel requests
-router.get("/", authMiddleware, roleMiddleware(["admin", "manager"]), getAllTravelRequests);
+// ✅ Admin/Manager view all travel requests
+router.get(
+  "/",
+  authMiddleware,
+  roleMiddleware(["admin", "manager"]),
+  getAllTravelRequests
+);
 
-// Admin/Manager updates travel status
-router.put("/:id/status", authMiddleware, roleMiddleware(["admin", "manager"]), updateTravelStatus);
+// ✅ Admin/Manager update travel request status
+router.put(
+  "/:id/status",
+  authMiddleware,
+  roleMiddleware(["admin", "manager"]),
+  updateTravelStatus
+);
 
 module.exports = router;

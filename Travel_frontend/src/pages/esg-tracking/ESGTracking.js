@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+/*import React, { useState } from 'react';
 import './ESGTracking.css';
 
 const ESGTracking = () => {
@@ -129,6 +129,125 @@ const ESGTracking = () => {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ESGTracking;*/
+// Temporary comment out ESGTracking component for revision
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./ESGTracking.css";
+
+const ESGTracking = () => {
+  const [carbonData, setCarbonData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ✅ Fetch ESG data from backend
+  useEffect(() => {
+    const fetchESGData = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/esg");
+        if (res.data && res.data.length > 0) {
+          const latest = res.data[0]; // latest ESG record from DB
+          setCarbonData(latest);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching ESG data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchESGData();
+  }, []);
+
+  // Dynamic score color
+  const getScoreColor = (score) => {
+    if (score >= 80) return "var(--success)";
+    if (score >= 60) return "var(--warning)";
+    return "var(--danger)";
+  };
+
+  if (loading) {
+    return <div className="loading">Loading ESG data...</div>;
+  }
+
+  if (!carbonData) {
+    return (
+      <div className="page-container">
+        <h1 className="page-title">ESG & Carbon Tracking</h1>
+        <p>No ESG data available. Please add data from the admin panel.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page-container">
+      <h1 className="page-title">ESG & Carbon Tracking</h1>
+
+      <div className="esg-overview">
+        <div className="esg-score-card">
+          <div
+            className="score-circle"
+            style={{ "--score": carbonData.esgscore }}
+          >
+            <svg viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="90" className="score-bg" />
+              <circle
+                cx="100"
+                cy="100"
+                r="90"
+                className="score-progress"
+                style={{
+                  stroke: getScoreColor(carbonData.esgscore),
+                  strokeDasharray: `${carbonData.esgscore * 5.65} 565`,
+                }}
+              />
+            </svg>
+            <div className="score-value">
+              <span className="score-number">{carbonData.esgscore}</span>
+              <span className="score-label">ESG Score</span>
+            </div>
+          </div>
+          <p className="score-description">
+            ESG performance for year <strong>{carbonData.year}</strong>
+          </p>
+        </div>
+
+        <div className="carbon-stats">
+          <div className="carbon-stat">
+            <div className="stat-icon">🌍</div>
+            <div className="stat-info">
+              <h3>{carbonData.co2reduction} kg</h3>
+              <p>CO₂ Reduction</p>
+            </div>
+          </div>
+          <div className="carbon-stat">
+            <div className="stat-icon">📈</div>
+            <div className="stat-info">
+              <h3>{carbonData.compliancerate}%</h3>
+              <p>Compliance Rate</p>
+            </div>
+          </div>
+          <div className="carbon-stat success">
+            <div className="stat-icon">💚</div>
+            <div className="stat-info">
+              <h3>{carbonData.sustainabilityindex}</h3>
+              <p>Sustainability Index</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="esg-content">
+        <div className="recommendations">
+          <h2>Recommendations</h2>
+          <p>
+            Keep improving your ESG performance by adopting greener travel
+            choices and reducing carbon footprint in future trips.
+          </p>
         </div>
       </div>
     </div>

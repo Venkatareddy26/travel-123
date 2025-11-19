@@ -13,26 +13,36 @@ const SafetyCompliance = () => {
   const [documents, setDocuments] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // ✅ Updated to match backend route names
-        const [guidelinesRes, contactsRes, insuranceRes, documentsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/safety/alerts'),         // risk guidelines → safety alerts
-          axios.get('http://localhost:5000/api/safety/checkin'),        // emergency contacts → check-in
-          axios.get('http://localhost:5000/api/safety/sos'),            // travel insurance → SOS info
-          axios.get('http://localhost:5000/api/documents/1'),           // documents for employeeId = 1
-        ]);
+  const fetchData = async () => {
+    try {
+      const [guidelinesRes, contactsRes, insuranceRes, documentsRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/safety/alerts'),
+        axios.get('http://localhost:5000/api/safety/checkin'),
+        axios.get('http://localhost:5000/api/safety/sos'),
+        axios.get('http://localhost:5000/api/documents/1'),
+      ]);
 
-        setRiskGuidelines(guidelinesRes.data || []);
-        setEmergencyContacts(contactsRes.data || []);
-        setTravelInsurances(insuranceRes.data || []);
-        setDocuments(Array.isArray(documentsRes.data) ? documentsRes.data : []);
-      } catch (err) {
-        console.error('Error fetching KPI data:', err);
-      }
-    };
-    fetchData();
-  }, []);
+      setRiskGuidelines(guidelinesRes.data || []);
+      setEmergencyContacts(contactsRes.data || []);
+      setTravelInsurances(insuranceRes.data || []);
+      setDocuments(Array.isArray(documentsRes.data) ? documentsRes.data : []);
+
+      // ✅ Store data in localStorage for Safety.js
+      const complianceData = {
+        riskGuidelines: guidelinesRes.data || [],
+        emergencyContacts: contactsRes.data || [],
+        travelInsurances: insuranceRes.data || [],
+        documents: Array.isArray(documentsRes.data) ? documentsRes.data : [],
+      };
+      localStorage.setItem("SafetyComplianceData", JSON.stringify(complianceData));
+
+    } catch (err) {
+      console.error('Error fetching KPI data:', err);
+    }
+  };
+  fetchData();
+}, []);
+
 
   return (
     <div className="page-container">

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// Itinerary.js
+/*import React, { useState, useEffect } from 'react';
 import './Itinerary.css';
 
 const Itinerary = () => {
@@ -309,9 +310,9 @@ const Itinerary = () => {
       </div>
 
       <div className="itinerary-grid">
-        {/* Left Column */}
+        {/* Left Column *}
         <div className="itinerary-main">
-          {/* Trip Summary */}
+          {/* Trip Summary *}
           <section className="trip-summary-card">
             <div className="summary-header">
               <div>
@@ -343,7 +344,7 @@ const Itinerary = () => {
             </div>
           </section>
 
-          {/* Travel Wallet */}
+          {/* Travel Wallet *}
           <section className="travel-wallet">
             <h2>Travel Wallet</h2>
             <div className="cards-container">
@@ -372,7 +373,7 @@ const Itinerary = () => {
             </div>
           </section>
 
-          {/* Day-by-Day Schedule */}
+          {/* Day-by-Day Schedule *}
           <section className="day-by-day-schedule">
             <div className="schedule-header">
               <h2>Day-by-Day Schedule</h2>
@@ -428,9 +429,9 @@ const Itinerary = () => {
           </section>
         </div>
 
-        {/* Right Sidebar */}
+        {/* Right Sidebar *}
         <aside className="itinerary-sidebar">
-          {/* Safety & Support */}
+          {/* Safety & Support *}
           <section className="safety-panel">
             <h3>Safety & Support</h3>
             <div className="safety-content">
@@ -460,7 +461,7 @@ const Itinerary = () => {
             </div>
           </section>
 
-          {/* Actions */}
+          {/* Actions *}
           <section className="actions-panel">
             <h3>Actions</h3>
             <div className="actions-list">
@@ -478,7 +479,7 @@ const Itinerary = () => {
         </aside>
       </div>
 
-      {/* Add Activity Modal */}
+      {/* Add Activity Modal *}
       {showAddActivity && (
         <div className="modal-overlay" onClick={() => setShowAddActivity(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -547,6 +548,234 @@ const Itinerary = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+export default Itinerary;
+*/
+// Itinerary.js
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "./Itinerary.css";
+
+const Itinerary = () => {
+  const [trip, setTrip] = useState(null);
+  const [travelCards, setTravelCards] = useState([]);
+  const [scheduleItems, setScheduleItems] = useState([]);
+
+  const [dayByDaySchedule, setDayByDaySchedule] = useState([]);
+  const [selectedDay, setSelectedDay] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Load itinerary (REMOVE HARDCODE)
+  useEffect(() => {
+    const fetchItinerary = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/api/itinerary/1");
+
+        setTrip(res.data.trip);
+        setTravelCards(res.data.cards || []);
+        setScheduleItems(res.data.schedule || []);
+      } catch (err) {
+        setError("Failed to load itinerary");
+        console.error("❌ Itinerary Error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItinerary();
+  }, []);
+
+  // Generate day-by-day schedule
+  useEffect(() => {
+    if (!scheduleItems.length) return;
+
+    const grouped = scheduleItems.reduce((acc, item) => {
+      const date = item.date;
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(item);
+      return acc;
+    }, {});
+
+    const scheduleArray = Object.keys(grouped)
+      .sort()
+      .map((date, index) => ({
+        date,
+        dayNumber: index + 1,
+        activities: grouped[date].sort((a, b) =>
+          a.time.localeCompare(b.time)
+        ),
+      }));
+
+    setDayByDaySchedule(scheduleArray);
+    if (!selectedDay && scheduleArray.length > 0) {
+      setSelectedDay(scheduleArray[0].date);
+    }
+  }, [scheduleItems]);
+
+  // UI HELPERS
+  const getItemIcon = (type) => {
+    switch (type) {
+      case "flight": return "✈️";
+      case "hotel": return "🏨";
+      case "meeting": return "🤝";
+      case "transport": return "🚗";
+      default: return "📅";
+    }
+  };
+
+  const getRiskBadgeClass = (risk) => {
+    switch (risk) {
+      case "Low": return "badge-success";
+      case "Medium": return "badge-warning";
+      case "High": return "badge-danger";
+      default: return "";
+    }
+  };
+
+  // Loading UI
+  if (loading) return <p className="loading">Loading itinerary...</p>;
+  if (error) return <p className="error">{error}</p>;
+  if (!trip) return <p>No itinerary found.</p>;
+
+  return (
+    <div className="page-container">
+      {/* Header */}
+      <div className="trip-header">
+        <div>
+          <h1 className="page-title">{trip.title}</h1>
+          <p className="trip-subtitle">
+            {trip.startDate} — {trip.endDate} • 
+            <span className="status-badge">{trip.status}</span>
+          </p>
+        </div>
+        <div className="trip-header-right">
+          <p className="approver-info">Approver: {trip.approver_name}</p>
+        </div>
+      </div>
+
+      <div className="itinerary-grid">
+        {/* LEFT MAIN CONTENT */}
+        <div className="itinerary-main">
+          
+          {/* Summary */}
+          <section className="trip-summary-card">
+            <div className="summary-header">
+              <div>
+                <h2>Trip Summary</h2>
+                <p className="destination-info">
+                  <span className="flag">{trip.destination_flag}</span>
+                  {trip.destination_city}, {trip.destination_country}
+                </p>
+                <div className="trip-meta">
+                  <p><strong>Purpose:</strong> {trip.purpose}</p>
+                  <p>
+                    <strong>Risk:</strong>
+                    <span className={`risk-badge ${getRiskBadgeClass(trip.risk)}`}>
+                      {trip.risk}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="duration-box">
+                <p className="duration-label">Duration</p>
+                <p className="duration-value">{trip.durationDays} days</p>
+              </div>
+            </div>
+
+            <hr className="divider" />
+
+            <div className="documents-grid">
+              <div className="doc-item">
+                <p className="doc-label">Passport</p>
+                <p className="doc-value">
+                  {trip.passport_status} • Expires {trip.passport_expires}
+                </p>
+              </div>
+              <div className="doc-item">
+                <p className="doc-label">Insurance</p>
+                <p className="doc-value">
+                  {trip.insurance_provider} • Policy #{trip.insurance_policy}
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Travel Wallet */}
+          <section className="travel-wallet">
+            <h2>Travel Wallet</h2>
+            <div className="cards-container">
+              {travelCards.map((card) => (
+                <div key={card.id} className="travel-card">
+                  <div className="card-header">
+                    <h3>{card.type}</h3>
+                    <span className="card-status">{card.status}</span>
+                  </div>
+                  <div className="card-details">
+                    <p className="card-number">{card.number}</p>
+                    <p className="card-expiry">Expires: {card.expiry}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Day-by-Day Schedule */}
+          <section className="day-by-day-schedule">
+            <h2>Day-by-Day Schedule</h2>
+
+            <div className="day-tabs">
+              {dayByDaySchedule.map((day) => (
+                <button
+                  key={day.date}
+                  className={`day-tab ${selectedDay === day.date ? "active" : ""}`}
+                  onClick={() => setSelectedDay(day.date)}
+                >
+                  Day {day.dayNumber}
+                </button>
+              ))}
+            </div>
+
+            {/* Activities */}
+            {selectedDay && (
+              <div className="activities-timeline">
+                {dayByDaySchedule
+                  .find((d) => d.date === selectedDay)
+                  .activities.map((activity) => (
+                    <div key={activity.id} className="activity-card">
+                      <span className="activity-icon">{getItemIcon(activity.type)}</span>
+                      <div className="activity-details">
+                        <div className="activity-time">{activity.time}</div>
+                        <h4>{activity.title}</h4>
+                        <p>{activity.details}</p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </section>
+        </div>
+
+        {/* RIGHT SIDEBAR */}
+        <aside className="itinerary-sidebar">
+          <section className="safety-panel">
+            <h3>Safety & Support</h3>
+            <p>{trip.emergency_name}</p>
+            <p>{trip.emergency_phone}</p>
+          </section>
+
+          <section className="actions-panel">
+            <h3>Actions</h3>
+            <button className="action-btn">📄 Download PDF</button>
+            <button className="action-btn">📤 Share</button>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 };

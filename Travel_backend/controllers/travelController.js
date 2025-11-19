@@ -1,4 +1,7 @@
-﻿const { Travel } = require("../modules");
+﻿//const { Trip } = require("../modules");
+//const jwt = require("jsonwebtoken");
+//const { Trip } = require("../../modules");   // ✅ FIXED PATH
+const { Trip } = require("../modules");
 const jwt = require("jsonwebtoken");
 
 // ✅ Create a new travel request
@@ -22,7 +25,7 @@ const createTravelRequest = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized: Missing user ID" });
     }
 
-    const newTrip = await Travel.create({
+    const newTrip = await Trip.create({
       userId,
       employeeName,
       destination,
@@ -58,7 +61,7 @@ const getMyTravelRequests = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized: Missing user ID" });
     }
 
-    const trips = await Travel.findAll({
+    const trips = await Trip.findAll({
       where: { userId },
       order: [["createdAt", "DESC"]],
     });
@@ -95,7 +98,7 @@ const getMyTravelRequests = async (req, res) => {
 // ✅ Admin: Fetch all travel requests
 const getAllTravelRequests = async (req, res) => {
   try {
-    const trips = await Travel.findAll({ order: [["createdAt", "DESC"]] });
+    const trips = await Trip.findAll({ order: [["createdAt", "DESC"]] });
     res.status(200).json(trips);
   } catch (error) {
     console.error("❌ Error fetching all travel requests:", error);
@@ -116,7 +119,7 @@ const updateTravelStatus = async (req, res) => {
       return res.status(400).json({ message: "Status is required" });
     }
 
-    const trip = await Travel.findByPk(id);
+    const trip = await Trip.findByPk(id);
     if (!trip) {
       return res.status(404).json({ message: "Trip not found" });
     }
@@ -134,7 +137,6 @@ const updateTravelStatus = async (req, res) => {
   }
 };
 
-// ✅ Export all controllers
 module.exports = {
   createTravelRequest,
   getMyTravelRequests,
