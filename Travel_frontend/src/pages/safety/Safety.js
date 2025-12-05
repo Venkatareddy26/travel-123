@@ -1,14 +1,26 @@
-import React, { useState, useEffect } from 'react';
+// Safety.jsx
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Safety.css';
 import './SafetyModalFix.css';
 
+const countByLevel = (data = [], level) => data.filter(d => d.level === level).length;
+
 const Safety = () => {
+  const navigate = useNavigate();
+
+  // --- dynamic risk data from backend API ---
+  const [riskData, setRiskData] = useState([]);
+  const [loadingRisk, setLoadingRisk] = useState(true);
+
+  // other local states (unchanged structure / format)
   const [showVaccinationForm, setShowVaccinationForm] = useState(false);
   const [showInsuranceForm, setShowInsuranceForm] = useState(false);
   const [showCovidGuidelines, setShowCovidGuidelines] = useState(false);
   const [showEmergencyContacts, setShowEmergencyContacts] = useState(false);
   const [showEmbassyDetails, setShowEmbassyDetails] = useState(false);
-  
+  const [embassyDetails, setEmbassyDetails] = useState([]);
+
   const [vaccinationData, setVaccinationData] = useState({
     employeeId: '',
     fullName: '',
@@ -42,18 +54,33 @@ const Safety = () => {
   });
 
   const [emergencyNumbers, setEmergencyNumbers] = useState({
-    police: '100',
-    ambulance: '108',
-    fire: '102',
-    personal: '123-456-7890'
+    police: '',
+    ambulance: '',
+    fire: '',
+    personal: ''
   });
 
+  const [emergencyContacts, setEmergencyContacts] = useState([]);
+  const [covidGuidelines, setCovidGuidelines] = useState([]);
+  const [travelTips, setTravelTips] = useState([]);
+  const [healthTips, setHealthTips] = useState([]);
   const [isEditingEmergency, setIsEditingEmergency] = useState(false);
 
   useEffect(() => {
     const savedContacts = localStorage.getItem('emergencyContacts');
     if (savedContacts) {
-      setEmergencyNumbers(JSON.parse(savedContacts));
+      try {
+        const parsed = JSON.parse(savedContacts);
+        // Check if it's the old format (object) or new format (array)
+        if (Array.isArray(parsed)) {
+          setEmergencyContacts(parsed);
+        } else {
+          // Convert old format to new format
+          setEmergencyNumbers(parsed);
+        }
+      } catch (e) {
+        console.error('Error parsing emergency contacts:', e);
+      }
     }
 
     const savedVaccinations = localStorage.getItem('vaccinationEntries');
@@ -65,46 +92,114 @@ const Safety = () => {
     if (savedInsurance) {
       setInsuranceEntries(JSON.parse(savedInsurance));
     }
+
+    const savedEmbassy = localStorage.getItem('embassyDetails');
+    if (savedEmbassy) {
+      setEmbassyDetails(JSON.parse(savedEmbassy));
+    }
+
+    const savedGuidelines = localStorage.getItem('covidGuidelines');
+    if (savedGuidelines) {
+      setCovidGuidelines(JSON.parse(savedGuidelines));
+    }
+
+    const savedTravelTips = localStorage.getItem('travelTips');
+    if (savedTravelTips) {
+      setTravelTips(JSON.parse(savedTravelTips));
+    } else {
+      const defaultTips = [
+        'Keep copies of important documents in separate locations',
+        'Register with your embassy if traveling internationally',
+        'Check local customs and cultural norms',
+        'Keep emergency cash in local currency',
+        'Share your itinerary with trusted contacts'
+      ];
+      setTravelTips(defaultTips);
+      localStorage.setItem('travelTips', JSON.stringify(defaultTips));
+    }
+
+    const savedHealthTips = localStorage.getItem('healthTips');
+    if (savedHealthTips) {
+      setHealthTips(JSON.parse(savedHealthTips));
+    } else {
+      const defaultHealthTips = [
+        'Check vaccination requirements for destination',
+        'Pack necessary medications with prescriptions',
+        'Research local healthcare facilities',
+        'Consider travel health insurance',
+        'Stay hydrated and get adequate rest'
+      ];
+      setHealthTips(defaultHealthTips);
+      localStorage.setItem('healthTips', JSON.stringify(defaultHealthTips));
+    }
+
+    const savedChecklist = localStorage.getItem('safetyChecklist');
+    if (savedChecklist) {
+      setChecklist(JSON.parse(savedChecklist));
+    } else {
+      // Set default checklist items on first load
+      const defaultChecklist = [
+        { id: '1', item: 'Passport/ID documents verified', checked: false, required: true, category: 'documents' },
+        { id: '2', item: 'Visa requirements checked', checked: false, required: true, category: 'documents' },
+        { id: '3', item: 'Travel insurance active', checked: false, required: true, category: 'insurance' },
+        { id: '4', item: 'Emergency contacts updated', checked: false, required: true, category: 'contacts' },
+        { id: '5', item: 'COVID-19 vaccination verified', checked: false, required: true, category: 'health' },
+        { id: '6', item: 'Medical requirements reviewed', checked: false, required: false, category: 'health' },
+        { id: '7', item: 'Itinerary shared with team', checked: false, required: true, category: 'communication' },
+        { id: '8', item: 'Local emergency numbers saved', checked: false, required: false, category: 'contacts' },
+        { id: '9', item: 'Travel advisories checked', checked: false, required: false, category: 'safety' },
+        { id: '10', item: 'Company travel policy acknowledged', checked: false, required: true, category: 'compliance' }
+      ];
+      setChecklist(defaultChecklist);
+      localStorage.setItem('safetyChecklist', JSON.stringify(defaultChecklist));
+    }
+
+    // Fetch risk data from backend API
+    const fetchRiskData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/risk", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const result = await response.json();
+        if (result.success) {
+          setRiskData(result.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching risk data:", error);
+      } finally {
+        setLoadingRisk(false);
+      }
+    };
+    fetchRiskData();
   }, []);
 
-  const [checklist, setChecklist] = useState([
-    { id: '1', item: 'Passport/ID documents verified', checked: true, required: true, category: 'documents' },
-    { id: '2', item: 'Visa requirements checked', checked: false, required: true, category: 'documents' },
-    { id: '3', item: 'Travel insurance active', checked: true, required: true, category: 'insurance' },
-    { id: '4', item: 'Emergency contacts updated', checked: false, required: true, category: 'contacts' },
-    { id: '5', item: 'COVID-19 vaccination verified', checked: false, required: true, category: 'health' },
-    { id: '6', item: 'Medical requirements reviewed', checked: false, required: false, category: 'health' },
-    { id: '7', item: 'Itinerary shared with team', checked: true, required: true, category: 'communication' },
-    { id: '8', item: 'Local emergency numbers saved', checked: false, required: false, category: 'contacts' },
-    { id: '9', item: 'Travel advisories checked', checked: false, required: false, category: 'safety' },
-    { id: '10', item: 'Company travel policy acknowledged', checked: false, required: true, category: 'compliance' }
-  ]);
-
+  // keep vaccination/insurance handling logic same as before
   const handleCheckboxChange = (id) => {
-    setChecklist(prev => 
-      prev.map(item => 
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
+    const updated = checklist.map(item =>
+      item.id === id ? { ...item, checked: !item.checked } : item
     );
+    setChecklist(updated);
+    localStorage.setItem('safetyChecklist', JSON.stringify(updated));
   };
 
   const handleVaccinationSubmit = (e) => {
     e.preventDefault();
     let updatedEntries;
-    
+
     if (editingIndex !== null) {
-      // Update existing entry
       updatedEntries = vaccinationEntries.map((entry, index) =>
         index === editingIndex ? { ...vaccinationData, updatedAt: new Date().toISOString() } : entry
       );
       alert('Vaccination details updated successfully!');
       setEditingIndex(null);
     } else {
-      // Add new entry
       updatedEntries = [...vaccinationEntries, { ...vaccinationData, submittedAt: new Date().toISOString() }];
       alert('Vaccination details submitted successfully!');
     }
-    
+
     setVaccinationEntries(updatedEntries);
     localStorage.setItem('vaccinationEntries', JSON.stringify(updatedEntries));
     setShowVaccinationList(true);
@@ -136,7 +231,7 @@ const Safety = () => {
   const handleInsuranceSubmit = (e) => {
     e.preventDefault();
     let updatedEntries;
-    
+
     if (editingInsuranceIndex !== null) {
       updatedEntries = insuranceEntries.map((entry, index) =>
         index === editingInsuranceIndex ? { ...insuranceData, updatedAt: new Date().toISOString() } : entry
@@ -147,7 +242,7 @@ const Safety = () => {
       updatedEntries = [...insuranceEntries, { ...insuranceData, submittedAt: new Date().toISOString() }];
       alert('Insurance details submitted successfully!');
     }
-    
+
     setInsuranceEntries(updatedEntries);
     localStorage.setItem('insuranceEntries', JSON.stringify(updatedEntries));
     setShowInsuranceList(true);
@@ -185,91 +280,102 @@ const Safety = () => {
   };
 
   const handleEmergencySave = () => {
-    localStorage.setItem('emergencyContacts', JSON.stringify(emergencyNumbers));
+    // Convert old format to new array format
+    const contactsArray = [
+      { name: 'Police', phone: emergencyNumbers.police },
+      { name: 'Ambulance', phone: emergencyNumbers.ambulance },
+      { name: 'Fire Brigade', phone: emergencyNumbers.fire },
+      { name: 'Personal Emergency Contact', phone: emergencyNumbers.personal }
+    ];
+    setEmergencyContacts(contactsArray);
+    localStorage.setItem('emergencyContacts', JSON.stringify(contactsArray));
     setIsEditingEmergency(false);
     alert('Emergency contacts saved successfully!');
   };
+
+  // checklist -- load from localStorage or use default
+  const [checklist, setChecklist] = useState([]);
 
   const completedItems = checklist.filter(item => item.checked).length;
   const requiredItems = checklist.filter(item => item.required);
   const completedRequired = requiredItems.filter(item => item.checked).length;
   const completionPercentage = Math.round((completedItems / checklist.length) * 100);
   const requiredCompletion = Math.round((completedRequired / requiredItems.length) * 100);
-
   const isReadyToTravel = completedRequired === requiredItems.length;
+
+  // navigate to RiskRatingDetails (keep same format but make it dynamic)
+  const openRiskDetails = (filterLevel) => {
+    // If you want to pass a filter param, you could instead use a query param. For now navigate to risk page.
+    // Keep navigation consistent with your routes: '/risk-rating-details' exists in App.
+    navigate('/risk-rating-details');
+  };
 
   return (
     <div className="page-container">
       <h1 className="page-title">Safety Checklist</h1>
-      
-      {/* Risk Rating System */}
+
+      {/* Risk Rating System (now dynamic, not hard-coded counts) */}
       <div className="risk-rating-section">
         <h2>🌍 Destination Risk Rating</h2>
+
         <div className="risk-summary-cards">
-          <div className="risk-summary-card low" onClick={() => alert('Low Risk Destinations: Safe for travel')}>
+          <div className="risk-summary-card low" onClick={() => openRiskDetails('Low')}>
             <div className="risk-icon">🟢</div>
             <div className="risk-info">
               <h3>Low Risk</h3>
-              <p>4 destinations</p>
+              <p>{countByLevel(riskData, 'Low')} destinations</p>
             </div>
           </div>
-          <div className="risk-summary-card medium" onClick={() => alert('Medium Risk: Exercise caution')}>
+
+          <div className="risk-summary-card medium" onClick={() => openRiskDetails('Medium')}>
             <div className="risk-icon">🟡</div>
             <div className="risk-info">
               <h3>Medium Risk</h3>
-              <p>2 destinations</p>
+              <p>{countByLevel(riskData, 'Medium')} destinations</p>
             </div>
           </div>
-          <div className="risk-summary-card high" onClick={() => alert('High Risk: Avoid non-essential travel')}>
+
+          <div className="risk-summary-card high" onClick={() => openRiskDetails('High')}>
             <div className="risk-icon">🔴</div>
             <div className="risk-info">
               <h3>High Risk</h3>
-              <p>1 destination</p>
+              <p>{countByLevel(riskData, 'High')} destinations</p>
             </div>
           </div>
         </div>
 
         <div className="risk-destinations">
-          <div className="risk-destination-item low-risk">
-            <div className="destination-header">
-              <span className="risk-badge low">🟢 Low Risk</span>
-              <h4>Tokyo, Japan</h4>
-            </div>
-            <p>Safe travel zone - General safety measures apply</p>
-            <span className="update-date">Updated: Oct 2025</span>
-          </div>
-          <div className="risk-destination-item low-risk">
-            <div className="destination-header">
-              <span className="risk-badge low">🟢 Low Risk</span>
-              <h4>Singapore</h4>
-            </div>
-            <p>Excellent safety standards - Recommended destination</p>
-            <span className="update-date">Updated: Oct 2025</span>
-          </div>
-          <div className="risk-destination-item medium-risk">
-            <div className="destination-header">
-              <span className="risk-badge medium">🟡 Medium Risk</span>
-              <h4>Delhi, India</h4>
-            </div>
-            <p>Air quality concerns - Health precautions advised</p>
-            <span className="update-date">Updated: Oct 2025</span>
-          </div>
-          <div className="risk-destination-item medium-risk">
-            <div className="destination-header">
-              <span className="risk-badge medium">🟡 Medium Risk</span>
-              <h4>Paris, France</h4>
-            </div>
-            <p>Protest activity reported - Stay informed of local conditions</p>
-            <span className="update-date">Updated: Oct 2025</span>
-          </div>
-          <div className="risk-destination-item high-risk">
-            <div className="destination-header">
-              <span className="risk-badge high">🔴 High Risk</span>
-              <h4>Cairo, Egypt</h4>
-            </div>
-            <p>⚠️ Travel only if essential - Contact HR before booking</p>
-            <span className="update-date">Updated: Oct 2025</span>
-          </div>
+          {/* render dynamic list from riskData (keeps visual format similar) */}
+          {riskData.length === 0 ? (
+            <>
+              {/* keep format: show two empty boxes similar to original UI when no data */}
+              <div className="empty-destination-box">
+                <div className="destination-header">
+                  <span className="risk-badge">—</span>
+                  <h4>Updated: N/A</h4>
+                </div>
+              </div>
+              <div className="empty-destination-box">
+                <div className="destination-header">
+                  <span className="risk-badge">—</span>
+                  <h4>Updated: N/A</h4>
+                </div>
+              </div>
+            </>
+          ) : (
+            riskData.map((d, idx) => (
+              <div key={idx} className={`risk-destination-item ${d.level ? d.level.toLowerCase() + '-risk' : ''}`}>
+                <div className="destination-header">
+                  <span className={`risk-badge ${d.level ? d.level.toLowerCase() : ''}`}>
+                    {d.level ? (d.level === 'Low' ? '🟢 Low Risk' : d.level === 'Medium' ? '🟡 Medium Risk' : '🔴 High Risk') : 'No Data'}
+                  </span>
+                  <h4>{d.city ? `${d.city}, ${d.country}` : d.country}</h4>
+                </div>
+                <p>{d.description || 'No description available'}</p>
+                <span className="update-date">Updated: {d.date || 'N/A'}</span>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
@@ -335,14 +441,14 @@ const Safety = () => {
                 <span className="stat-label">Required Items</span>
               </div>
             </div>
-            
+
             <div className="progress-bar">
-              <div 
+              <div
                 className="progress-fill"
                 style={{ width: `${completionPercentage}%` }}
               ></div>
             </div>
-            
+
             <div className={`travel-status ${isReadyToTravel ? 'ready' : 'not-ready'}`}>
               {isReadyToTravel ? (
                 <>
@@ -410,44 +516,38 @@ const Safety = () => {
           <div className="info-card">
             <h3>Emergency Contacts</h3>
             <div className="contact-list">
-              <div className="contact-item">
-                <strong>Company Emergency Line:</strong>
-                <span>+1 (555) 123-4567</span>
-              </div>
-              <div className="contact-item">
-                <strong>Travel Insurance:</strong>
-                <span>+1 (555) 987-6543</span>
-              </div>
-              <div className="contact-item">
-                <strong>Local Embassy:</strong>
-                <span>+1 (555) 456-7890</span>
-              </div>
-              <div className="contact-item">
-                <strong>Medical Assistance:</strong>
-                <span>+1 (555) 789-0123</span>
-              </div>
+              {emergencyContacts.length === 0 ? (
+                <p>No emergency contacts added. Click "Emergency Contacts" to manage.</p>
+              ) : (
+                emergencyContacts.slice(0, 4).map((contact, idx) => (
+                  <div key={idx} className="contact-item">
+                    <strong>{contact.name}:</strong>
+                    <span>{contact.phone}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           <div className="info-card">
             <h3>Travel Tips</h3>
             <ul className="tips-list">
-              <li>Keep copies of important documents in separate locations</li>
-              <li>Register with your embassy if traveling internationally</li>
-              <li>Check local customs and cultural norms</li>
-              <li>Keep emergency cash in local currency</li>
-              <li>Share your itinerary with trusted contacts</li>
+              {travelTips.length === 0 ? (
+                <li>No travel tips available</li>
+              ) : (
+                travelTips.map((tip, idx) => <li key={idx}>{tip}</li>)
+              )}
             </ul>
           </div>
 
           <div className="info-card">
             <h3>Health & Safety</h3>
             <ul className="tips-list">
-              <li>Check vaccination requirements for destination</li>
-              <li>Pack necessary medications with prescriptions</li>
-              <li>Research local healthcare facilities</li>
-              <li>Consider travel health insurance</li>
-              <li>Stay hydrated and get adequate rest</li>
+              {healthTips.length === 0 ? (
+                <li>No health tips available</li>
+              ) : (
+                healthTips.map((tip, idx) => <li key={idx}>{tip}</li>)
+              )}
             </ul>
           </div>
 
@@ -477,7 +577,7 @@ const Safety = () => {
         </div>
       </div>
 
-      {/* Vaccination Form Modal */ }
+      {/* Vaccination Modal (unchanged) */}
       {showVaccinationForm && (
         <div className="modal-overlay" onClick={() => {
           setShowVaccinationForm(false);
@@ -530,7 +630,7 @@ const Safety = () => {
                           </div>
                           <div className="record-row">
                             <span className="label">Vaccination Date:</span>
-                            <span className="value">{new Date(entry.vaccinationDate).toLocaleDateString()}</span>
+                            <span className="value">{entry.vaccinationDate ? new Date(entry.vaccinationDate).toLocaleDateString() : '-'}</span>
                           </div>
                           {entry.notes && (
                             <div className="record-row">
@@ -540,7 +640,7 @@ const Safety = () => {
                           )}
                           <div className="record-row">
                             <span className="label">Submitted:</span>
-                            <span className="value">{new Date(entry.submittedAt).toLocaleString()}</span>
+                            <span className="value">{entry.submittedAt ? new Date(entry.submittedAt).toLocaleString() : '-'}</span>
                           </div>
                         </div>
                         <div className="record-actions">
@@ -558,9 +658,9 @@ const Safety = () => {
               </div>
             ) : (
               <form onSubmit={handleVaccinationSubmit} className="safety-form">
-                <button 
-                  type="button" 
-                  className="back-to-list-btn" 
+                <button
+                  type="button"
+                  className="back-to-list-btn"
                   onClick={() => {
                     setShowVaccinationList(true);
                     setEditingIndex(null);
@@ -569,54 +669,54 @@ const Safety = () => {
                 >
                   ← Back to List
                 </button>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Employee ID *</label>
-                  <input type="text" required value={vaccinationData.employeeId} 
-                    onChange={(e) => setVaccinationData({...vaccinationData, employeeId: e.target.value})} />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Employee ID *</label>
+                    <input type="text" required value={vaccinationData.employeeId}
+                      onChange={(e) => setVaccinationData({ ...vaccinationData, employeeId: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" required value={vaccinationData.fullName}
+                      onChange={(e) => setVaccinationData({ ...vaccinationData, fullName: e.target.value })} />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Age *</label>
+                    <input type="number" required value={vaccinationData.age}
+                      onChange={(e) => setVaccinationData({ ...vaccinationData, age: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" value={vaccinationData.dateOfBirth}
+                      onChange={(e) => setVaccinationData({ ...vaccinationData, dateOfBirth: e.target.value })} />
+                  </div>
                 </div>
                 <div className="form-group">
-                  <label>Full Name *</label>
-                  <input type="text" required value={vaccinationData.fullName}
-                    onChange={(e) => setVaccinationData({...vaccinationData, fullName: e.target.value})} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Age *</label>
-                  <input type="number" required value={vaccinationData.age}
-                    onChange={(e) => setVaccinationData({...vaccinationData, age: e.target.value})} />
+                  <label>Vaccination Date *</label>
+                  <input type="date" required value={vaccinationData.vaccinationDate}
+                    onChange={(e) => setVaccinationData({ ...vaccinationData, vaccinationDate: e.target.value })} />
                 </div>
                 <div className="form-group">
-                  <label>Date of Birth</label>
-                  <input type="date" value={vaccinationData.dateOfBirth}
-                    onChange={(e) => setVaccinationData({...vaccinationData, dateOfBirth: e.target.value})} />
+                  <label>Notes</label>
+                  <textarea rows="3" value={vaccinationData.notes}
+                    onChange={(e) => setVaccinationData({ ...vaccinationData, notes: e.target.value })} />
                 </div>
-              </div>
-              <div className="form-group">
-                <label>Vaccination Date *</label>
-                <input type="date" required value={vaccinationData.vaccinationDate}
-                  onChange={(e) => setVaccinationData({...vaccinationData, vaccinationDate: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label>Notes</label>
-                <textarea rows="3" value={vaccinationData.notes}
-                  onChange={(e) => setVaccinationData({...vaccinationData, notes: e.target.value})} />
-              </div>
-              <div className="form-group">
-                <label>Vaccination Receipt (PDF/Photo)</label>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" />
-              </div>
-              <button type="submit" className="submit-btn">
-                {editingIndex !== null ? '✓ Update Record' : '✓ Submit Vaccination Details'}
-              </button>
+                <div className="form-group">
+                  <label>Vaccination Receipt (PDF/Photo)</label>
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                </div>
+                <button type="submit" className="submit-btn">
+                  {editingIndex !== null ? '✓ Update Record' : '✓ Submit Vaccination Details'}
+                </button>
               </form>
             )}
           </div>
         </div>
       )}
 
-      {/* Insurance Form Modal */}
+      {/* Insurance Modal (unchanged) */}
       {showInsuranceForm && (
         <div className="modal-overlay" onClick={() => {
           setShowInsuranceForm(false);
@@ -673,7 +773,7 @@ const Safety = () => {
                           </div>
                           <div className="record-row">
                             <span className="label">Valid From:</span>
-                            <span className="value">{new Date(entry.coverageStartDate).toLocaleDateString()} - {new Date(entry.coverageEndDate).toLocaleDateString()}</span>
+                            <span className="value">{entry.coverageStartDate ? new Date(entry.coverageStartDate).toLocaleDateString() : '-'} - {entry.coverageEndDate ? new Date(entry.coverageEndDate).toLocaleDateString() : '-'}</span>
                           </div>
                           <div className="record-row">
                             <span className="label">Helpline:</span>
@@ -695,9 +795,9 @@ const Safety = () => {
               </div>
             ) : (
               <form onSubmit={handleInsuranceSubmit} className="safety-form">
-                <button 
-                  type="button" 
-                  className="back-to-list-btn" 
+                <button
+                  type="button"
+                  className="back-to-list-btn"
                   onClick={() => {
                     setShowInsuranceList(true);
                     setEditingInsuranceIndex(null);
@@ -705,83 +805,83 @@ const Safety = () => {
                 >
                   ← Back to List
                 </button>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Employee ID *</label>
-                  <input type="text" required value={insuranceData.employeeId}
-                    onChange={(e) => setInsuranceData({...insuranceData, employeeId: e.target.value})} />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Employee ID *</label>
+                    <input type="text" required value={insuranceData.employeeId}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, employeeId: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" required value={insuranceData.fullName}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, fullName: e.target.value })} />
+                  </div>
                 </div>
                 <div className="form-group">
-                  <label>Full Name *</label>
-                  <input type="text" required value={insuranceData.fullName}
-                    onChange={(e) => setInsuranceData({...insuranceData, fullName: e.target.value})} />
+                  <label>Department / Designation *</label>
+                  <input type="text" required value={insuranceData.department}
+                    onChange={(e) => setInsuranceData({ ...insuranceData, department: e.target.value })} />
                 </div>
-              </div>
-              <div className="form-group">
-                <label>Department / Designation *</label>
-                <input type="text" required value={insuranceData.department}
-                  onChange={(e) => setInsuranceData({...insuranceData, department: e.target.value})} />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Insurance Provider *</label>
-                  <input type="text" required value={insuranceData.insuranceProvider}
-                    onChange={(e) => setInsuranceData({...insuranceData, insuranceProvider: e.target.value})} />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Insurance Provider *</label>
+                    <input type="text" required value={insuranceData.insuranceProvider}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, insuranceProvider: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Policy Number *</label>
+                    <input type="text" required value={insuranceData.policyNumber}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, policyNumber: e.target.value })} />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label>Policy Number *</label>
-                  <input type="text" required value={insuranceData.policyNumber}
-                    onChange={(e) => setInsuranceData({...insuranceData, policyNumber: e.target.value})} />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Coverage Type *</label>
+                    <input type="text" required value={insuranceData.coverageType}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, coverageType: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Destination Coverage *</label>
+                    <input type="text" required value={insuranceData.destinationCoverage}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, destinationCoverage: e.target.value })} />
+                  </div>
                 </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Coverage Type *</label>
-                  <input type="text" required value={insuranceData.coverageType}
-                    onChange={(e) => setInsuranceData({...insuranceData, coverageType: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>Destination Coverage *</label>
-                  <input type="text" required value={insuranceData.destinationCoverage}
-                    onChange={(e) => setInsuranceData({...insuranceData, destinationCoverage: e.target.value})} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Coverage Start Date *</label>
-                  <input type="date" required value={insuranceData.coverageStartDate}
-                    onChange={(e) => setInsuranceData({...insuranceData, coverageStartDate: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>Coverage End Date *</label>
-                  <input type="date" required value={insuranceData.coverageEndDate}
-                    onChange={(e) => setInsuranceData({...insuranceData, coverageEndDate: e.target.value})} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Insurance Helpline *</label>
-                <input type="tel" required value={insuranceData.insuranceHelpline}
-                  onChange={(e) => setInsuranceData({...insuranceData, insuranceHelpline: e.target.value})} />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Emergency Contact Name *</label>
-                  <input type="text" required value={insuranceData.emergencyContactName}
-                    onChange={(e) => setInsuranceData({...insuranceData, emergencyContactName: e.target.value})} />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Coverage Start Date *</label>
+                    <input type="date" required value={insuranceData.coverageStartDate}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, coverageStartDate: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Coverage End Date *</label>
+                    <input type="date" required value={insuranceData.coverageEndDate}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, coverageEndDate: e.target.value })} />
+                  </div>
                 </div>
                 <div className="form-group">
-                  <label>Emergency Contact Phone *</label>
-                  <input type="tel" required value={insuranceData.emergencyContactPhone}
-                    onChange={(e) => setInsuranceData({...insuranceData, emergencyContactPhone: e.target.value})} />
+                  <label>Insurance Helpline *</label>
+                  <input type="tel" required value={insuranceData.insuranceHelpline}
+                    onChange={(e) => setInsuranceData({ ...insuranceData, insuranceHelpline: e.target.value })} />
                 </div>
-              </div>
-              <div className="form-group">
-                <label>Proof Document (PDF/Photo)</label>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" />
-              </div>
-              <button type="submit" className="submit-btn">
-                {editingInsuranceIndex !== null ? '✓ Update Record' : '✓ Submit Insurance Details'}
-              </button>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Emergency Contact Name *</label>
+                    <input type="text" required value={insuranceData.emergencyContactName}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, emergencyContactName: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label>Emergency Contact Phone *</label>
+                    <input type="tel" required value={insuranceData.emergencyContactPhone}
+                      onChange={(e) => setInsuranceData({ ...insuranceData, emergencyContactPhone: e.target.value })} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Proof Document (PDF/Photo)</label>
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                </div>
+                <button type="submit" className="submit-btn">
+                  {editingInsuranceIndex !== null ? '✓ Update Record' : '✓ Submit Insurance Details'}
+                </button>
               </form>
             )}
           </div>
@@ -797,38 +897,18 @@ const Safety = () => {
               <button className="close-btn" onClick={() => setShowCovidGuidelines(false)}>✕</button>
             </div>
             <div className="guidelines-content">
-              <div className="guideline-item">
-                <span className="guideline-icon">😷</span>
-                <p>Wear a mask in crowded places</p>
-              </div>
-              <div className="guideline-item">
-                <span className="guideline-icon">📏</span>
-                <p>Maintain social distancing of at least 6 feet</p>
-              </div>
-              <div className="guideline-item">
-                <span className="guideline-icon">🧼</span>
-                <p>Wash your hands frequently with soap and water</p>
-              </div>
-              <div className="guideline-item">
-                <span className="guideline-icon">🧴</span>
-                <p>Use hand sanitizer with at least 60% alcohol</p>
-              </div>
-              <div className="guideline-item">
-                <span className="guideline-icon">🚫</span>
-                <p>Avoid touching your face, especially eyes, nose, and mouth</p>
-              </div>
-              <div className="guideline-item">
-                <span className="guideline-icon">🏠</span>
-                <p>Stay home if you feel unwell or have symptoms</p>
-              </div>
-              <div className="guideline-item">
-                <span className="guideline-icon">📢</span>
-                <p>Follow local health authority guidelines and updates</p>
-              </div>
-              <div className="emergency-number">
-                <strong>Emergency Number:</strong> 123-456-7890
-                <p>Call immediately if symptoms are found</p>
-              </div>
+              {covidGuidelines.length === 0 ? (
+                <div className="no-records">
+                  <p>No COVID guidelines added yet. Guidelines can be managed by administrators.</p>
+                </div>
+              ) : (
+                covidGuidelines.map((guideline, idx) => (
+                  <div key={idx} className="guideline-item">
+                    <span className="guideline-icon">📌</span>
+                    <p>{guideline.text || guideline}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -881,22 +961,22 @@ const Safety = () => {
                 <div className="form-group">
                   <label>Police</label>
                   <input type="tel" value={emergencyNumbers.police}
-                    onChange={(e) => setEmergencyNumbers({...emergencyNumbers, police: e.target.value})} />
+                    onChange={(e) => setEmergencyNumbers({ ...emergencyNumbers, police: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label>Ambulance</label>
                   <input type="tel" value={emergencyNumbers.ambulance}
-                    onChange={(e) => setEmergencyNumbers({...emergencyNumbers, ambulance: e.target.value})} />
+                    onChange={(e) => setEmergencyNumbers({ ...emergencyNumbers, ambulance: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label>Fire Brigade</label>
                   <input type="tel" value={emergencyNumbers.fire}
-                    onChange={(e) => setEmergencyNumbers({...emergencyNumbers, fire: e.target.value})} />
+                    onChange={(e) => setEmergencyNumbers({ ...emergencyNumbers, fire: e.target.value })} />
                 </div>
                 <div className="form-group">
                   <label>Personal Contact</label>
                   <input type="tel" value={emergencyNumbers.personal}
-                    onChange={(e) => setEmergencyNumbers({...emergencyNumbers, personal: e.target.value})} />
+                    onChange={(e) => setEmergencyNumbers({ ...emergencyNumbers, personal: e.target.value })} />
                 </div>
                 <div className="button-group">
                   <button className="save-btn" onClick={handleEmergencySave}>💾 Save</button>
@@ -917,38 +997,22 @@ const Safety = () => {
               <button className="close-btn" onClick={() => setShowEmbassyDetails(false)}>✕</button>
             </div>
             <div className="embassy-list">
-              <div className="embassy-item">
-                <span className="embassy-flag">🇺🇸</span>
-                <div>
-                  <strong>US Embassy</strong>
-                  <p>123 Embassy St, City, Country</p>
-                  <p className="embassy-phone">📞 +1 (555) 100-1000</p>
+              {embassyDetails.length === 0 ? (
+                <div className="no-records">
+                  <p>No embassy details available. Add embassy information using the form below.</p>
                 </div>
-              </div>
-              <div className="embassy-item">
-                <span className="embassy-flag">🇬🇧</span>
-                <div>
-                  <strong>UK Embassy</strong>
-                  <p>456 Consulate Rd, City, Country</p>
-                  <p className="embassy-phone">📞 +44 (555) 200-2000</p>
-                </div>
-              </div>
-              <div className="embassy-item">
-                <span className="embassy-flag">🇮🇳</span>
-                <div>
-                  <strong>Indian Embassy</strong>
-                  <p>789 Diplomatic Ln, City, Country</p>
-                  <p className="embassy-phone">📞 +91 (555) 300-3000</p>
-                </div>
-              </div>
-              <div className="embassy-item">
-                <span className="embassy-flag">🇦🇺</span>
-                <div>
-                  <strong>Australian Embassy</strong>
-                  <p>101 High Comm Ave, City, Country</p>
-                  <p className="embassy-phone">📞 +61 (555) 400-4000</p>
-                </div>
-              </div>
+              ) : (
+                embassyDetails.map((embassy, idx) => (
+                  <div key={idx} className="embassy-item">
+                    <span className="embassy-flag">🏛️</span>
+                    <div>
+                      <strong>{embassy.country || 'Embassy'}</strong>
+                      <p>{embassy.address || 'Address not provided'}</p>
+                      <p className="embassy-phone">📞 {embassy.phone || 'N/A'}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -958,6 +1022,7 @@ const Safety = () => {
 };
 
 export default Safety;
+
 
 /*import React, { useEffect, useState } from "react";
 import "./Safety.css";
@@ -1590,18 +1655,22 @@ const Safety = () => {
           <div className="info-card">
             <h3>Travel Tips</h3>
             <ul className="tips-list">
-              <li>Keep copies of important documents in separate locations</li>
-              <li>Register with your embassy if traveling internationally</li>
-              <li>Share your itinerary with trusted contacts</li>
+              {travelTips.length === 0 ? (
+                <li>No travel tips available</li>
+              ) : (
+                travelTips.map((tip, idx) => <li key={idx}>{tip}</li>)
+              )}
             </ul>
           </div>
 
           <div className="info-card">
             <h3>Health & Safety</h3>
             <ul className="tips-list">
-              <li>Pack necessary medications with prescriptions</li>
-              <li>Research local healthcare facilities</li>
-              <li>Consider travel health insurance</li>
+              {healthTips.length === 0 ? (
+                <li>No health tips available</li>
+              ) : (
+                healthTips.map((tip, idx) => <li key={idx}>{tip}</li>)
+              )}
             </ul>
           </div>
 

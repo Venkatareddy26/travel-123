@@ -4,28 +4,35 @@ const sequelize = require("../../config/db");
 const Trip = sequelize.define(
   "Trip",
   {
-    employeeName: { type: DataTypes.STRING, allowNull: false },
+    employeeName: { type: DataTypes.STRING, allowNull: true, defaultValue: "Unknown" },
     destination: { type: DataTypes.STRING, allowNull: false },
     purpose: { type: DataTypes.TEXT, allowNull: false },
-    startDate: { type: DataTypes.DATEONLY, allowNull: false },
-    endDate: { type: DataTypes.DATEONLY, allowNull: false },
+    startDate: { type: DataTypes.DATEONLY, allowNull: true },
+    endDate: { type: DataTypes.DATEONLY, allowNull: true },
     budget: { type: DataTypes.FLOAT, defaultValue: 0 },
     urgency: { type: DataTypes.STRING },
     accommodation: { type: DataTypes.STRING },
     userId: { type: DataTypes.INTEGER, allowNull: true },
-    status: { type: DataTypes.STRING, defaultValue: "Pending" }, // consistent with controller
+    status: { type: DataTypes.STRING, defaultValue: "Pending" },
   },
   {
-    timestamps: true, // adds createdAt and updatedAt
-    tableName: "travels", // ensures consistent table name
+    timestamps: true,
+    tableName: "travels",
   }
 );
 
 const Expense = sequelize.define("Expense", {
-  description: { type: DataTypes.STRING, allowNull: false },
+  title: { type: DataTypes.STRING, allowNull: true },
   amount: { type: DataTypes.FLOAT, defaultValue: 0 },
   status: { type: DataTypes.STRING, defaultValue: "pending" },
-  userId: { type: DataTypes.INTEGER, allowNull: true },
+  category: { type: DataTypes.STRING, allowNull: true },
+  date_of_expense: { type: DataTypes.DATEONLY, allowNull: true },
+  receipt_url: { type: DataTypes.STRING, allowNull: true },
+  notes: { type: DataTypes.TEXT, allowNull: true },
+  userId: { type: DataTypes.STRING, allowNull: true, field: 'user_id' },
+}, {
+  tableName: "Expenses",
+  timestamps: true,
 });
 
 module.exports = { Trip, Expense };

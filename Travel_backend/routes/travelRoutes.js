@@ -40,4 +40,30 @@ router.put(
   updateTravelStatus
 );
 
+// ✅ Admin Portal Compatible: PATCH for status update
+router.patch(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["admin", "manager"]),
+  updateTravelStatus
+);
+
+// ✅ Admin Portal Compatible: DELETE trip
+router.delete(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["admin", "manager"]),
+  async (req, res) => {
+    try {
+      const { Trip } = require("../modules");
+      const { id } = req.params;
+      await Trip.destroy({ where: { id } });
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
+);
+
 module.exports = router;

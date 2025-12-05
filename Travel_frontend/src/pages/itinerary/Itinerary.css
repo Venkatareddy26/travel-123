@@ -875,3 +875,99 @@
     max-height: 95vh;
   }
 }
+.actions-panel {
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.actions-panel h3 {
+  text-align: center;
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.gradient-btn {
+  width: 100%;
+  padding: 14px 1px;
+  border: none;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #5F5CFF, #A164FF);
+  box-shadow: 0px 5px 15px rgba(100, 60, 255, 0.25);
+  transition: 0.2s ease-in-out;
+}
+
+.gradient-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0px 8px 22px rgba(100, 60, 255, 0.35);
+}
+
+.action-icon {
+  font-size: 20px;
+}
+/* Actions Panel */
+.actions-panel {
+  padding: 25px;
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.actions-panel h3 {
+  text-align: center;
+  margin-bottom: 18px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+}
+
+.actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Bigger gradient buttons */
+.gradient-btn {
+  width: 100%;
+  padding: 0ch 20px;        /* Increase button height */
+  border: none;
+  border-radius: 14px;       /* Smoother shape */
+  display: flex;
+  align-items: center;
+  gap: 10px;                 /* More spacing between icon + text */
+  cursor: pointer;
+  font-size: 15px;           /* Larger text */
+  font-weight: 500;
+
+  background: linear-gradient(135deg, rgb(102, 126, 234) 0%, rgb(118, 75, 162) 100%);
+  color: #ffffff;
+  box-shadow: 0px 6px 18px rgba(100, 60, 255, 0.28);
+
+  transition: all 0.2s ease-in-out;
+}
+
+.gradient-btn:hover {
+  transform: translateY(-0px); /* Slight lift */
+  box-shadow: 0px 10px 25px rgba(100, 60, 255, 0.4);
+}
+
+/* Bigger icons */
+.action-icon {
+  font-size: 15px;  /* Increased icon size */
+}

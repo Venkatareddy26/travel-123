@@ -29,7 +29,7 @@ async function getCO2ThisMonth(userId) {
 }
 
 async function getBudgetUsed(userId) {
-  const expenses = await Expense.findAll({ where: { userId } });
+  const expenses = await Expense.findAll({ where: { userId: String(userId) } });
   return expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 }
 
@@ -151,7 +151,7 @@ async function getCO2ThisMonth(userId) {
 // 🔧 Helper: Total Budget Used
 // =========================
 async function getBudgetUsed(userId) {
-  const expenses = await Expense.findAll({ where: { userId } });
+  const expenses = await Expense.findAll({ where: { userId: String(userId) } });
   return expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
 }
 
@@ -166,7 +166,7 @@ async function getRecentActivity(userId) {
   });
 
   const expenses = await Expense.findAll({
-    where: { userId },
+    where: { userId: String(userId) },
     order: [["updatedAt", "DESC"]],
     limit: 5,
   });
@@ -199,11 +199,22 @@ router.get("/", authMiddleware, async (req, res) => {
     const userId = req.user.id;
 
     // BASIC METRICS
-    const activeTrips = await Trip.count({ where: { userId, status: "active" } });
+    const activeTrips = await Trip.count({
+      where: {
+        userId,
+        status: {
+          [Op.in]: [
+            "Pending", "pending",
+            "Approved", "approved",
+            "Active", "active"
+          ]
+        }
+      },
+    });
 
     const pendingExpenses =
       (await Expense.sum("amount", {
-        where: { userId, status: "pending" },
+        where: { userId: String(userId), status: "pending" },
       })) || 0;
 
     const alerts = await Alert.count({

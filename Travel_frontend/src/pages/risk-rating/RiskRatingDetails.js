@@ -360,10 +360,8 @@ function countByLevel(data, level) {
 
 const RiskRatingDetails = () => {
 
-  const [riskData, setRiskData] = useState(() => {
-    const savedData = localStorage.getItem('riskData');
-    return savedData ? JSON.parse(savedData) : [];
-  });
+  const [riskData, setRiskData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [filter, setFilter] = useState('All');
   const [search, setSearch] = useState('');
@@ -391,10 +389,28 @@ const RiskRatingDetails = () => {
   // ---------- WEATHER API KEY (replace with your own) ----------
   const API_KEY = "YOUR_OPENWEATHER_API_KEY_HERE";
 
-  // ---------- Persist localStorage ----------
+  // ---------- Fetch risk data from backend ----------
   useEffect(() => {
-    localStorage.setItem('riskData', JSON.stringify(riskData));
-  }, [riskData]);
+    const fetchRiskData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch("http://localhost:5000/api/risk", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const result = await response.json();
+        if (result.success) {
+          setRiskData(result.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching risk data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRiskData();
+  }, []);
 
   // ---------- Helper: compute recommendation from weather + numeric thresholds ----------
   const computeRecommendation = ({ main = '', tempC = null, windKmh = null, humidity = null } = {}) => {
@@ -543,13 +559,8 @@ const RiskRatingDetails = () => {
   const closeAdmin = () => setAdminMode(false);
 
   // ---------- Save: update if exists or add new (preserve weather) ----------
-  const saveForm = e => {
+  const saveForm = async (e) => {
     e.preventDefault();
-
-    const existingIndex = riskData.findIndex(d =>
-      d.country.toLowerCase() === form.country.toLowerCase() &&
-      (form.city ? d.city?.toLowerCase() === form.city.toLowerCase() : true)
-    );
 
     // ensure date exists
     const record = {
@@ -557,12 +568,37 @@ const RiskRatingDetails = () => {
       date: form.date || new Date().toISOString().split('T')[0],
     };
 
-    if (existingIndex !== -1) {
-      const updated = [...riskData];
-      updated[existingIndex] = record;
-      setRiskData(updated);
-    } else {
-      setRiskData([...riskData, record]);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/risk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(record),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Refresh data from backend
+        const fetchResponse = await fetch("http://localhost:5000/api/risk", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const fetchResult = await fetchResponse.json();
+        if (fetchResult.success) {
+          setRiskData(fetchResult.data || []);
+        }
+        alert("Risk data saved successfully!");
+      } else {
+        alert("Failed to save risk data: " + result.message);
+      }
+    } catch (error) {
+      console.error("Error saving risk data:", error);
+      alert("Error saving risk data");
     }
 
     setAdminMode(false);

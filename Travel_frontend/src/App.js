@@ -150,16 +150,31 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/itinerary"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Itinerary />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+         <Route
+  path="/itinerary"
+  element={
+    <ProtectedRoute>
+      <Layout>
+        <Itinerary />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/itinerary/:tripId"
+  element={
+    <ProtectedRoute>
+      <Layout>
+        <Itinerary />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
+
+
+
           <Route
             path="/safety"
             element={
@@ -261,35 +276,28 @@ function App() {
             }
           />
           <Route
-            path="/employee/safety-compliance"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <SafetyCompliance />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/risk-rating-details"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <RiskRatingDetails />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employee/safety-compliance/risk-details"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <RiskRatingDetails />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+ 
+  path="/employee/safety-compliance"
+  element={
+    <ProtectedRoute>
+      <Layout>
+        <SafetyCompliance />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
+         <Route
+  path="/employee/risk-rating-details"
+  element={
+    <ProtectedRoute>
+      <Layout>
+        <RiskRatingDetails />
+      </Layout>
+    </ProtectedRoute>
+  }
+/>
+
           <Route
             path="/employee/safety-compliance/manage-contacts"
             element={
@@ -319,4 +327,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;     

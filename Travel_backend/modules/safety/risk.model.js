@@ -4,7 +4,7 @@ const sequelize = require("../../config/db");
 const Risk = sequelize.define("Risk", {
   travelId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: true  // Made optional for general risk ratings
   },
   country: {
     type: DataTypes.STRING,
@@ -20,12 +20,16 @@ const Risk = sequelize.define("Risk", {
   },
   description: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: true
   },
   date: {
     type: DataTypes.DATEONLY,
     allowNull: false,
     defaultValue: DataTypes.NOW
+  },
+  weather: {
+    type: DataTypes.JSON,
+    allowNull: true
   }
 });
 

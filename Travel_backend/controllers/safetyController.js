@@ -105,6 +105,16 @@ exports.createRisk = async (req, res) => {
       date: date || new Date()
     });
 
+    // =========================================
+    // 🔥 REAL-TIME UPDATE FOR DASHBOARD
+    // =========================================
+    req.io.emit("dashboardUpdated");
+
+    // =========================================
+    // 🔥 REAL-TIME UPDATE FOR SAFETY PAGE
+    // =========================================
+    req.io.emit("safetyUpdated");
+
     res.status(201).json(risk);
   } catch (err) {
     console.error("Sequelize Error:", err);

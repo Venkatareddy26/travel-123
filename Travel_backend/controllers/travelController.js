@@ -1,10 +1,7 @@
-﻿//const { Trip } = require("../modules");
-//const jwt = require("jsonwebtoken");
-//const { Trip } = require("../../modules");   // ✅ FIXED PATH
-const { Trip } = require("../modules");
+﻿const { Trip } = require("../modules");
 const jwt = require("jsonwebtoken");
 
-// ✅ Create a new travel request
+// ✅ Create a new travel request (REAL-TIME ENABLED)
 const createTravelRequest = async (req, res) => {
   try {
     console.log("📩 Received trip data:", req.body);
@@ -37,6 +34,17 @@ const createTravelRequest = async (req, res) => {
       accommodation,
       status: "Pending",
     });
+
+    // ============================================
+    // 🔥 REAL-TIME FEATURE: UPDATE DASHBOARD
+    // ============================================
+    req.io.emit("dashboardUpdated");
+
+    // ============================================
+    // 🔥 REAL-TIME FEATURE: UPDATE TRIP REQUEST LIST
+    // Only updates the logged-in user
+    // ============================================
+    req.io.to(userId.toString()).emit("tripsUpdated");
 
     res.status(201).json({
       success: true,
@@ -95,42 +103,90 @@ const getMyTravelRequests = async (req, res) => {
   }
 };
 
-// ✅ Admin: Fetch all travel requests
+// Admin functions - Returns data in format compatible with Admin Portal
 const getAllTravelRequests = async (req, res) => {
   try {
     const trips = await Trip.findAll({ order: [["createdAt", "DESC"]] });
-    res.status(200).json(trips);
+    
+    // Format trips for admin portal compatibility
+    const formattedTrips = trips.map((trip) => {
+      const t = trip.toJSON();
+      return {
+        id: t.id,
+        destination: t.destination || "Unknown",
+        start: t.startDate,
+        end: t.endDate,
+        status: (t.status || "pending").toLowerCase(),
+        requester: t.employeeName || "Unknown Employee",
+        requesterEmail: t.requesterEmail || "",
+        department: t.department || "General",
+        purpose: t.purpose || "",
+        costEstimate: Number(t.budget) || 0,
+        riskLevel: t.riskLevel || "Low",
+        createdAt: t.createdAt,
+        // Original fields for employee portal
+        employeeName: t.employeeName,
+        startDate: t.startDate,
+        endDate: t.endDate,
+        budget: t.budget,
+      };
+    });
+
+    res.status(200).json({ success: true, trips: formattedTrips });
   } catch (error) {
     console.error("❌ Error fetching all travel requests:", error);
     res.status(500).json({
+      success: false,
       message: "Internal Server Error",
       error: error.message,
     });
   }
 };
 
-// ✅ Admin: Update status (Approve / Reject)
 const updateTravelStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
     if (!status) {
-      return res.status(400).json({ message: "Status is required" });
+      return res.status(400).json({ success: false, message: "Status is required" });
     }
 
     const trip = await Trip.findByPk(id);
     if (!trip) {
-      return res.status(404).json({ message: "Trip not found" });
+      return res.status(404).json({ success: false, message: "Trip not found" });
     }
 
     trip.status = status;
     await trip.save();
 
-    res.status(200).json({ message: "Trip status updated successfully", trip });
+    // ============================================
+    // 🔥 REAL-TIME: Notify employee of status change
+    // ============================================
+    if (req.io && trip.userId) {
+      req.io.to(trip.userId.toString()).emit("tripStatusUpdated", {
+        tripId: id,
+        status: status,
+        message: `Your trip to ${trip.destination} has been ${status}`,
+      });
+      req.io.emit("dashboardUpdated");
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Trip status updated successfully", 
+      trip: {
+        id: trip.id,
+        destination: trip.destination,
+        status: trip.status,
+        start: trip.startDate,
+        end: trip.endDate,
+      }
+    });
   } catch (error) {
     console.error("❌ Error updating travel status:", error);
     res.status(500).json({
+      success: false,
       message: "Internal Server Error",
       error: error.message,
     });

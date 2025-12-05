@@ -65,7 +65,7 @@ const { User, Policy } = require("./modules"); // make sure modules/index.js exp
 // seed.js
 const bcrypt = require("bcryptjs");
 const sequelize = require("./config/db");
-const { User, Policy } = require("./modules"); // Ensure all models are exported
+const { Users: User, Policy } = require("./modules"); // Ensure all models are exported
 
 (async () => {
   try {

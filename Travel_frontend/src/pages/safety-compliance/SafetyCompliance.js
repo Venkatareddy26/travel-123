@@ -1,4 +1,5 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿//saftey and complinace
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './SafetyCompliance.css';
@@ -54,7 +55,8 @@ const SafetyCompliance = () => {
         <div className="safety-card risk-card">
           <div className="safety-card-icon">📊</div>
           <h2>Risk Rating System</h2>
-          <button className="btn-primary" onClick={() => navigate('/risk-rating-details')}>
+          <button className="btn-primary" onClick={() => navigate('/employee/risk-rating-details')
+}>
             View Details
           </button>
         </div>
@@ -70,7 +72,7 @@ const SafetyCompliance = () => {
 
         {/* Travel Insurance Verification */}
         <div className="safety-card insurance-card">
-          <div className="safety-card-icon">🛡️</div>
+          <div className="safety-card-icon">🛡</div>
           <h2>Travel Insurance</h2>
           <button className="btn-primary" onClick={() => navigate('/employee/travel-insurance-verification')}>
             View Insurance
