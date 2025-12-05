@@ -1,6 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './index.css';
 
 // Eager load login (first page users see)
@@ -29,19 +29,27 @@ const PageLoader = () => (
   </div>
 );
 
-// Auth check helper
+// Auth check helper - checks if user is admin/manager
 function isAuthenticated() {
   try {
-    return !!localStorage.getItem('app_token');
+    const token = localStorage.getItem('app_token') || localStorage.getItem('token');
+    const userStr = localStorage.getItem('currentUser') || localStorage.getItem('user');
+    if (!token || !userStr) return false;
+    
+    const user = JSON.parse(userStr);
+    // Only admin and manager can access admin portal
+    return user.role === 'admin' || user.role === 'manager';
   } catch (e) {
     return false;
   }
 }
 
-// Protected route wrapper
+// Protected route wrapper - redirects to main login if not authenticated
 function ProtectedRoute({ children }) {
   if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+    // Redirect to main login page (same port)
+    window.location.href = '/login';
+    return <PageLoader />;
   }
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
@@ -77,9 +85,9 @@ if (el) {
   const root = createRoot(el);
   root.render(
     <React.StrictMode>
-      <BrowserRouter>
+      <HashRouter>
         <AppRoutes />
-      </BrowserRouter>
+      </HashRouter>
     </React.StrictMode>
   );
 }
