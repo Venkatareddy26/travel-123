@@ -127,11 +127,36 @@ cd travel-123
 ```
 
 ### Step 2: Database Setup
+
+**Option A: Fresh Setup (Recommended)**
 ```bash
-psql -U postgres
-CREATE DATABASE corporate_travel;
-\q
+# Create database
+psql -U postgres -c "CREATE DATABASE corporate_travel;"
+
+# Run setup script
+psql -U postgres -d corporate_travel -f Travel_backend/db/setup.sql
+
+# Seed test users
+cd Travel_backend
+node seed.js
 ```
+
+**Option B: Restore from Dump (includes sample data)**
+```bash
+# Create database
+psql -U postgres -c "CREATE DATABASE corporate_travel;"
+
+# Restore full dump
+psql -U postgres -d corporate_travel -f Travel_backend/db/db_dump.sql
+```
+
+**Database Files:**
+| File | Description |
+|------|-------------|
+| `db/setup.sql` | Clean schema setup script |
+| `db/db_dump.sql` | Full dump with sample data |
+| `db/DATABASE_SCHEMA.md` | Schema documentation |
+| `seed.js` | Creates test users |
 
 ### Step 3: Backend Setup
 ```bash
