@@ -1,265 +1,93 @@
-# Corporate Travel Management System
+# Corporate Travel Policy Tool
 
-A full-stack corporate travel management solution with unified single-port architecture. Both Employee and Admin portals run on a single port with role-based redirection.
-
-![Node.js](https://img.shields.io/badge/Node.js-22.x-green)
-![React](https://img.shields.io/badge/React-18.x-blue)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-blue)
-
----
+A full-stack corporate travel management system with unified single-port architecture.
 
 ## 🏗️ Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                    UNIFIED SINGLE-PORT ARCHITECTURE                  │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│                    ┌────────────────────┐                            │
-│                    │   Single Login     │                            │
-│                    │   localhost:3000   │                            │
-│                    └─────────┬──────────┘                            │
-│                              │                                       │
-│              ┌───────────────┴───────────────┐                       │
-│              │      Role-Based Redirect      │                       │
-│              └───────────────┬───────────────┘                       │
-│                              │                                       │
-│         ┌────────────────────┴────────────────────┐                  │
-│         ▼                                         ▼                  │
-│   ┌──────────────┐                      ┌──────────────┐             │
-│   │   Employee   │                      │    Admin     │             │
-│   │   Portal     │                      │   Portal     │             │
-│   │  /dashboard  │                      │ /admin/#/... │             │
-│   └──────────────┘                      └──────────────┘             │
-│                                                                      │
-│                    ┌────────────────────┐                            │
-│                    │   Backend API      │                            │
-│                    │   localhost:5000   │                            │
-│                    └─────────┬──────────┘                            │
-│                              │                                       │
-│                    ┌────────────────────┐                            │
-│                    │    PostgreSQL      │                            │
-│                    │  corporate_travel  │                            │
-│                    └────────────────────┘                            │
-└──────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│              SINGLE-PORT ARCHITECTURE                   │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│              ┌──────────────────┐                       │
+│              │   Unified Login  │                       │
+│              │  localhost:3000  │                       │
+│              └────────┬─────────┘                       │
+│                       │                                 │
+│         ┌─────────────┴─────────────┐                   │
+│         ▼                           ▼                   │
+│  ┌─────────────┐           ┌─────────────┐              │
+│  │  Employee   │           │   Admin     │              │
+│  │   Portal    │           │   Portal    │              │
+│  │ /dashboard  │           │ /admin/#/.. │              │
+│  └─────────────┘           └─────────────┘              │
+│                                                         │
+│              ┌──────────────────┐                       │
+│              │   Backend API    │                       │
+│              │  localhost:5000  │                       │
+│              └────────┬─────────┘                       │
+│                       │                                 │
+│              ┌──────────────────┐                       │
+│              │   PostgreSQL     │                       │
+│              │ corporate_travel │                       │
+│              └──────────────────┘                       │
+└─────────────────────────────────────────────────────────┘
 ```
-
----
 
 ## 📁 Project Structure
 
 ```
-Corporate-Travel-Management/
-├── Admin_Portal/            # Admin Portal Source Code
-│   ├── src/
-│   │   ├── components/      # Dashboard components
-│   │   ├── pages/           # Admin pages
-│   │   └── main.js          # Entry point (HashRouter)
-│   ├── vite.config.js       # Vite config (base: /admin/)
-│   └── package.json
-│
-├── Travel_backend/          # Backend API
-│   ├── config/              # Database configuration
+Corporate-Travel-policy-Tool/
+├── Travel_backend/          # Node.js + Express API
 │   ├── controllers/         # Route handlers
 │   ├── middleware/          # Auth middleware
 │   ├── modules/             # Sequelize models
 │   ├── routes/              # API routes
-│   ├── .env                 # Environment variables
-│   ├── server.js            # Main server
-│   └── seed.js              # Database seeder
+│   ├── db/db_dump.sql       # Database schema + sample data
+│   ├── seed.js              # Create test users
+│   └── server.js            # Main server (port 5000)
 │
-├── Travel_frontend/         # Employee Portal + Admin Built Files
-│   ├── public/
-│   │   └── admin/           # Admin Portal built files (auto-generated)
-│   ├── src/
-│   │   ├── components/      # Reusable components
-│   │   ├── context/         # Auth context
-│   │   ├── pages/           # Page components
-│   │   │   └── login/       # Unified login page
-│   │   └── services/        # API services
-│   └── package.json
+├── Travel_frontend/         # React Employee Portal
+│   ├── public/admin/        # Admin Portal (built files)
+│   └── src/                 # Employee Portal source
 │
-├── .gitignore
-└── README.md
+└── Admin_Portal/            # Admin Portal source (for development)
 ```
 
----
-
-## ✨ Features
-
-### Single Login Page
-- One unified login at `http://localhost:3000/login`
-- Role-based automatic redirection
-- Admin/Manager → Admin Portal
-- Employee → Employee Portal
-
-### Employee Portal
-- ✈️ Create and manage travel requests
-- 📋 View trip history
-- 💰 Expense tracking
-- 📄 Document management
-- 🗓️ Itinerary management
-- 🚨 Safety compliance & SOS alerts
-- 🌍 Risk rating by destination
-- 📞 Emergency contacts
-
-### Admin Portal
-- 📊 Dashboard with KPIs
-- ✅ Approve/Reject travel requests
-- 📈 Travel analytics
-- 🗺️ Global travel map
-- ⚠️ Risk management
-- 📋 Policy management
-- 💵 Expense oversight
-
----
-
-## 🚀 Quick Start
+## 🚀 Quick Setup
 
 ### Prerequisites
-- Node.js (v16+)
-- PostgreSQL (v12+)
+- Node.js v16+
+- PostgreSQL v12+
+- Git Bash (Windows) or Terminal (Mac/Linux)
 
-### Step 1: Clone Repository
+### Bash Commands
+
 ```bash
+# 1. Clone repository
 git clone https://github.com/Venkatareddy26/Corporate-Travel-policy-Tool.git
 cd Corporate-Travel-policy-Tool
-```
 
-### Step 2: Database Setup
-
-```bash
-# Create database
+# 2. Database setup
 psql -U postgres -c "CREATE DATABASE corporate_travel;"
-
-# Run database dump (creates tables + sample data)
 psql -U postgres -d corporate_travel -f Travel_backend/db/db_dump.sql
-```
 
-**OR use seed.js:**
-```bash
-cd Travel_backend
-node seed.js
-```
-
-**Database Files:**
-| File | Description |
-|------|-------------|
-| `db/db_dump.sql` | Full database with tables and sample data |
-| `seed.js` | Creates test users and trips |
-
-### Step 3: Backend Setup
-```bash
+# 3. Backend setup
 cd Travel_backend
 npm install
+node seed.js
+npm start
 
-# Configure .env file:
-# DB_HOST=localhost
-# DB_PORT=5432
-# DB_USER=postgres
-# DB_PASSWORD=your_password
-# DB_NAME=corporate_travel
-# PORT=5000
-# JWT_SECRET=your_secret
-
-node seed.js    # Create test users
-npm start       # Start backend on port 5000
-```
-
-### Step 4: Frontend Setup
-```bash
+# 4. Frontend setup (new terminal)
 cd Travel_frontend
 npm install
-npm start       # Start on port 3000
+npm start
 ```
 
-### Step 5: Access Application
-Open `http://localhost:3000/login`
+### Environment Variables
 
----
-
-## 🔑 Test Credentials
-
-| Role | Email | Password | Redirects To |
-|------|-------|----------|--------------|
-| Admin | admin@corp.com | admin123 | Admin Portal |
-| Manager | manager@corp.com | manager123 | Admin Portal |
-| Employee | employee@corp.com | employee123 | Employee Portal |
-
----
-
-## 🌐 URLs
-
-| Service | URL |
-|---------|-----|
-| Login Page | http://localhost:3000/login |
-| Employee Portal | http://localhost:3000/dashboard |
-| Admin Portal | http://localhost:3000/admin/index.html#/dashboard |
-| Backend API | http://localhost:5000 |
-
----
-
-## 🔄 Rebuilding Admin Portal
-
-If you modify Admin Portal source code:
-
-```bash
-cd Admin_Portal
-npm run build
-
-# Copy built files to frontend
-# Windows:
-xcopy /E /Y dist\* ..\Travel_frontend\public\admin\
-
-# Mac/Linux:
-cp -r dist/* ../Travel_frontend/public/admin/
+Create `Travel_backend/.env`:
 ```
-
----
-
-## 📡 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/login` | User login |
-| POST | `/api/auth/register` | User registration |
-| GET | `/api/travel` | Get user's trips |
-| GET | `/api/trips` | Get all trips (Admin) |
-| POST | `/api/travel` | Create trip request |
-| PATCH | `/api/travel/:id/status` | Update trip status |
-| GET | `/api/kpi` | Dashboard KPIs |
-| GET | `/api/expenses` | Expense records |
-| GET | `/api/documents` | Documents list |
-
----
-
-## 🛡️ Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Backend | Node.js, Express, PostgreSQL, Sequelize, JWT |
-| Employee Portal | React 18, React Router, Axios |
-| Admin Portal | React 18, Vite, Tailwind CSS, Recharts |
-
----
-
-## 🖥️ Quick Setup (Bash Commands)
-
-Copy and run these commands in Git Bash or terminal:
-
-```bash
-# Clone repository
-git clone https://github.com/Venkatareddy26/Corporate-Travel-policy-Tool.git
-cd Corporate-Travel-policy-Tool
-
-# Database setup
-psql -U postgres -c "CREATE DATABASE corporate_travel;"
-psql -U postgres -d corporate_travel -f Travel_backend/db/db_dump.sql
-
-# Backend setup
-cd Travel_backend
-npm install
-cat > .env << EOF
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
@@ -267,43 +95,101 @@ DB_PASSWORD=your_password
 DB_NAME=corporate_travel
 PORT=5000
 JWT_SECRET=mysecretkey123
-EOF
-npm start
-
-# Frontend setup (open new terminal)
-cd Travel_frontend
-npm install
-npm start
-
-# Open browser: http://localhost:3000/login
-# Login: admin@corp.com / admin123
 ```
 
----
+## 🔑 Test Credentials
+
+| Role | Email | Password | Portal |
+|------|-------|----------|--------|
+| Admin | admin@corp.com | admin123 | Admin Portal |
+| Manager | manager@corp.com | manager123 | Admin Portal |
+| Employee | employee@corp.com | employee123 | Employee Portal |
+
+## 🌐 URLs
+
+| Service | URL |
+|---------|-----|
+| Login | http://localhost:3000/login |
+| Employee Portal | http://localhost:3000/dashboard |
+| Admin Portal | http://localhost:3000/admin/index.html#/dashboard |
+| Backend API | http://localhost:5000 |
+
+## ✨ Features
+
+### Employee Portal
+- ✈️ Trip requests & history
+- 💰 Expense tracking
+- 📋 Itinerary management
+- 🛡️ Safety compliance
+- 📄 Document management
+
+### Admin Portal
+- 📊 Dashboard with KPIs
+- ✅ Approve/Reject requests
+- 📈 Travel analytics
+- ⚠️ Risk management
+- 📋 Policy management
+
+## 📡 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /api/auth/login | User login |
+| POST | /api/auth/register | User registration |
+| GET | /api/travel | Get trips |
+| POST | /api/travel | Create trip |
+| PATCH | /api/travel/:id/status | Update status |
+| GET | /api/kpi | Dashboard KPIs |
+| GET | /api/expenses | Expenses |
 
 ## 🔧 Troubleshooting
 
-**Database Connection Error:**
-- Ensure PostgreSQL is running
-- Verify `.env` credentials
+**Dashboard redirects to login:**
+```bash
+# Clear browser localStorage
+# Press F12 → Console → type:
+localStorage.clear()
+# Then refresh and login again
+```
 
-**Port Already in Use:**
+**Database issues:**
+```bash
+# Re-run database setup
+psql -U postgres -d corporate_travel -f Travel_backend/db/db_dump.sql
+node seed.js
+```
+
+**Port in use:**
 ```bash
 # Windows
 netstat -ano | findstr :3000
 taskkill /PID <PID> /F
+
+# Mac/Linux
+lsof -i :3000
+kill -9 <PID>
 ```
 
-**Login Issues:**
-- Run `node seed.js` to create test users
-- Clear browser localStorage
+## 🔄 Rebuild Admin Portal
+
+If you modify Admin Portal source:
+```bash
+cd Admin_Portal
+npm run build
+
+# Windows
+xcopy /E /Y dist\* ..\Travel_frontend\public\admin\
+
+# Mac/Linux
+cp -r dist/* ../Travel_frontend/public/admin/
+```
+
+## 🛡️ Tech Stack
+
+- **Backend:** Node.js, Express, PostgreSQL, Sequelize, JWT
+- **Frontend:** React 18, React Router, Axios
+- **Admin:** React 18, Vite, Tailwind CSS, Recharts
 
 ---
 
-## 👨‍💻 Author
-
-**Venkatareddy26** - [@Venkatareddy26](https://github.com/Venkatareddy26)
-
----
-
-**Happy Traveling! ✈️**
+**Author:** [@Venkatareddy26](https://github.com/Venkatareddy26)
