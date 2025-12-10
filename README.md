@@ -84,6 +84,62 @@ npm install
 npm start
 ```
 
+## 🗄️ Database Commands
+
+### PostgreSQL Setup
+```bash
+# Create database
+psql -U postgres -c "CREATE DATABASE corporate_travel;"
+
+# Import schema and sample data
+psql -U postgres -d corporate_travel -f Travel_backend/db/db_dump.sql
+
+# Create test users
+cd Travel_backend
+node seed.js
+```
+
+### Check Data in PostgreSQL
+```bash
+# Connect to database
+psql -U postgres -d corporate_travel
+
+# View all tables
+\dt
+
+# View users
+SELECT * FROM "Users";
+
+# View trips
+SELECT * FROM "Trips";
+
+# Exit
+\q
+```
+
+### Using pgAdmin Query Tool
+```sql
+-- View all users
+SELECT id, name, email, role FROM "Users";
+
+-- View all trips
+SELECT id, destination, status, "userId" FROM "Trips";
+
+-- View trips with user details
+SELECT t.id, t.destination, t.status, u.name, u.email 
+FROM "Trips" t 
+JOIN "Users" u ON t."userId" = u.id;
+```
+
+### Reset Database
+```bash
+# Drop and recreate
+psql -U postgres -c "DROP DATABASE IF EXISTS corporate_travel;"
+psql -U postgres -c "CREATE DATABASE corporate_travel;"
+psql -U postgres -d corporate_travel -f Travel_backend/db/db_dump.sql
+cd Travel_backend && node seed.js
+```
+
 ### Environment Variables
 
 Create `Travel_backend/.env`:
