@@ -8,7 +8,7 @@ const Navigation = ({ currentPath }) => {
   const { logout, user } = useAuth();
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: '🏠' },
+    { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/trip-request', label: 'Trip Request', icon: '✈️' },
     { path: '/itinerary', label: 'Itinerary', icon: '📋' },
     { path: '/safety', label: 'Safety', icon: '✅' },
