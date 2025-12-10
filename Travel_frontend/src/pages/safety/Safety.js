@@ -305,9 +305,8 @@ const Safety = () => {
 
   // navigate to RiskRatingDetails (keep same format but make it dynamic)
   const openRiskDetails = (filterLevel) => {
-    // If you want to pass a filter param, you could instead use a query param. For now navigate to risk page.
-    // Keep navigation consistent with your routes: '/risk-rating-details' exists in App.
-    navigate('/risk-rating-details');
+    // Navigate to risk rating details page with filter level
+    navigate('/employee/risk-rating-details', { state: { filterLevel } });
   };
 
   return (
